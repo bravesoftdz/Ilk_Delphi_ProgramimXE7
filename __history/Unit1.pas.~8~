@@ -1,0 +1,222 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,vectortypes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, GLWin32Viewer,
+  GLCrossPlatform, BaseClasses, GLScene, GLObjects, GLCoordinates,
+  GLVectorFileObjects;
+
+type
+  TForm1 = class(TForm)
+    Button1: TButton;
+    GLScene1: TGLScene;
+    GLSceneViewer1: TGLSceneViewer;
+    Button2: TButton;
+    Edit1: TEdit;
+    Label1: TLabel;
+    GLCamera1: TGLCamera;
+    GLLightSource1: TGLLightSource;
+    GLDummyCube1: TGLDummyCube;
+    GLFreeForm1: TGLFreeForm;
+    Button3: TButton;
+    Button4: TButton;
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure GLSceneViewer1MouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure GLSceneViewer1MouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure GLSceneViewer1MouseWheelDown(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
+    procedure Button3Click(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
+    procedure GLSceneViewer1KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+///////////////////////////////////////////////////////////
+type
+  TDate=class
+  Month,Day,Year:Integer;
+  procedure setValue(m,d,y:Integer);
+  function leapYear: Boolean;
+  end;
+
+////////////////////////////////////////////////////////////////
+var
+  Form1: TForm1;
+  List: TStringList;
+   mx, my: integer;
+  //structer tanýmý
+  //
+  //
+    type
+    cartesian = Record
+    N0,N1,N2: double;
+    //procedure cartesian(N0:double;N1:double;N2:double);
+    end;
+//   type
+//    cartesian = Record     SONU
+
+    type
+    faced= Record
+    X,Y,Z,Nor:cartesian;
+    end;
+  //structer tanýmý
+
+
+implementation
+
+{$R *.dfm}
+
+ // Procedure ler deðer döndürmezler sadece birþey icra edip býrakýrlar........
+// C++ karþýlýðý Void dir.
+procedure dosyaOku(dosyaAdi: string);
+var
+  I: integer;
+  txtDosyam:TextFile;
+  text:string;
+begin
+ AssignFile(txtDosyam, dosyaadi);
+  // Reopen the file in read only mode
+  Reset(txtDosyam);
+ Readln(txtDosyam, text);
+ while not Eof(txtDosyam) do
+  begin
+    //ShowMessage(text);
+    ReadLn(txtDosyam, text);
+  end;
+  ShowMessage(text);
+  CloseFile(txtDosyam);
+end;
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+   dosyaOku('Gear.STL');
+end;
+
+////TDta procedurleri-->
+procedure TDate.setValue(m: Integer; d: Integer; y: Integer);
+begin
+  Month:=m;
+  Day:=d;
+  Year:=y;
+end;
+function TDate.leapYear: Boolean;
+begin
+  Result:=IsLeapYear(Year);
+end;
+ ////TDta procedurleri--<
+
+
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+     List  := TStringList.Create;
+//     List:='m,e,h,t,';
+     List.Delimiter:='.';
+     List.DelimitedText:=Edit1.Text;
+     Label1.Caption:= inttostr(List.Count);
+//     Label1.Caption:=List[0]+List[1]+List[2];
+      //Split('.', edit1.Text, List) ;
+end;
+
+procedure TForm1.Button3Click(Sender: TObject);
+begin
+GLCamera1.Position.X:=200;
+GLCamera1.Position.Y:=200;
+GLCamera1.Position.Z:=200;
+GLCamera1.Up.X:=0;
+GLCamera1.Up.Y:=0;
+GLCamera1.Up.Z:=1;
+end;
+
+procedure TForm1.Button4Click(Sender: TObject);
+begin
+if GLCamera1.CameraStyle = csPerspective  then
+begin
+GLCamera1.CameraStyle:=csOrthogonal;
+glcamera1.FocalLength:=0.1;    // focal length ?????????
+GLCamera1.Position.X:=200;
+GLCamera1.Position.Y:=200;
+GLCamera1.Position.Z:=200;
+GLCamera1.Up.X:=0;
+GLCamera1.Up.Y:=0;
+GLCamera1.Up.Z:=1;
+end
+else
+begin
+GLCamera1.CameraStyle:= csPerspective;
+glcamera1.FocalLength:=50;
+GLCamera1.Position.X:=200;
+GLCamera1.Position.Y:=200;
+GLCamera1.Position.Z:=200;
+GLCamera1.Up.X:=0;
+GLCamera1.Up.Y:=0;
+GLCamera1.Up.Z:=1;
+end;
+
+end;
+
+procedure TForm1.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+if Key=VK_ESCAPE then
+  begin
+  Key:=0;
+  Label1.Caption:='';
+  end
+  else
+  begin
+  Label1.Caption:='CTRL';
+  end;
+end;
+
+procedure TForm1.GLSceneViewer1KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+
+//  if Key=ssctrl then
+//  begin
+//  Key:=0;
+//  Label1.Caption:='';
+//  end
+//  else
+//  begin
+//  Label1.Caption:='CTRL';
+//  end;
+
+end;
+
+procedure TForm1.GLSceneViewer1MouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  if ssMiddle In Shift then
+  begin
+   GLCamera1.Movearoundtarget(my - y, mx - x);
+     Label1.Caption:='x '+inttostr(my - y)+' y '+inttostr(mx - x) ;
+  end;
+    mx := x;
+    my := y;
+
+
+end;
+
+procedure TForm1.GLSceneViewer1MouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+       Label1.Caption:='Mouse X '+inttostr(MousePos.X);
+end;
+
+procedure TForm1.GLSceneViewer1MouseWheelDown(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+begin
+EXIT;
+            Label1.Caption:='Mouse X '+inttostr(MousePos.X);
+end;
+
+end.

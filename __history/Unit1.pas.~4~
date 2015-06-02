@@ -1,0 +1,92 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,vectortypes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, GLWin32Viewer,
+  GLCrossPlatform, BaseClasses, GLScene;
+
+type
+  TForm1 = class(TForm)
+    Button1: TButton;
+    GLScene1: TGLScene;
+    GLSceneViewer1: TGLSceneViewer;
+    procedure Button1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+
+  //structer tanýmý
+    type
+    cartesian = Record
+    N0,N1,N2: double;
+    end;
+    type
+    faced= Record
+    X,Y,Z,Nor:cartesian;
+    end;
+  //structer tanýmý
+
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  myFile : TextFile;
+  text   : string;
+  yuzey: faced;
+begin
+//  yuzey.X.N0:=10;
+//  yuzey.X.N1:=10;
+//  yuzey.X.N2:=10;
+//  yuzey.Y.N0:=20;
+//  yuzey.Y.N1:=20;
+//  yuzey.Y.N2:=20;
+//  yuzey.Z.N0:=30;
+//  yuzey.Z.N1:=30;
+//  yuzey.Z.N2:=30;
+//  yuzey.Nor.N0:=10;
+//  yuzey.Nor.N1:=10;
+//  yuzey.Nor.N2:=10;
+ // Try to open the Test.txt file for writing to
+  AssignFile(myFile, 'Test.txt');
+  ReWrite(myFile);
+
+  // Write a couple of well known words to this file
+  WriteLn(myFile, 'Hello World');
+
+  // Close the file
+  CloseFile(myFile);
+
+  // Reopen the file for reading
+  Reset(myFile);
+
+  // Display the file contents
+  while not Eof(myFile) do
+  begin
+    ReadLn(myFile, text);
+    ShowMessage(text);
+  end;
+
+  // Close the file for the last time
+  CloseFile(myFile);
+showmessage('Ýlk Delphi Program Yeyy ');
+end;
+
+/// Procedure ler deðer döndürmezler sadece birþey icra edip býrakýrlar........
+// C++ karþýlýðý Void dri.
+procedure dosyaOku(dosyaAdi: string);
+var
+  I: integer;
+begin
+
+end;
+end.

@@ -1,0 +1,110 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,vectortypes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, GLWin32Viewer,
+  GLCrossPlatform, BaseClasses, GLScene;
+
+type
+  TForm1 = class(TForm)
+    Button1: TButton;
+    GLScene1: TGLScene;
+    GLSceneViewer1: TGLSceneViewer;
+    Button2: TButton;
+    Edit1: TEdit;
+    Label1: TLabel;
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+///////////////////////////////////////////////////////////
+type
+  TDate=class
+  Month,Day,Year:Integer;
+  procedure setValue(m,d,y:Integer);
+  function leapYear: Boolean;
+  end;
+
+////////////////////////////////////////////////////////////////
+var
+  Form1: TForm1;
+  List: TStringList;
+  //structer tanýmý
+  //
+  //
+    type
+    cartesian = Record
+    N0,N1,N2: double;
+    //procedure cartesian(N0:double;N1:double;N2:double);
+    end;
+//   type
+//    cartesian = Record     SONU
+
+    type
+    faced= Record
+    X,Y,Z,Nor:cartesian;
+    end;
+  //structer tanýmý
+
+
+implementation
+
+{$R *.dfm}
+
+ // Procedure ler deðer döndürmezler sadece birþey icra edip býrakýrlar........
+// C++ karþýlýðý Void dir.
+procedure dosyaOku(dosyaAdi: string);
+var
+  I: integer;
+  txtDosyam:TextFile;
+  text:string;
+begin
+ AssignFile(txtDosyam, dosyaadi);
+  // Reopen the file in read only mode
+  Reset(txtDosyam);
+ Readln(txtDosyam, text);
+ while not Eof(txtDosyam) do
+  begin
+    //ShowMessage(text);
+    ReadLn(txtDosyam, text);
+  end;
+  ShowMessage(text);
+  CloseFile(txtDosyam);
+end;
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+   dosyaOku('Gear.STL');
+end;
+
+////TDta procedurleri-->
+procedure TDate.setValue(m: Integer; d: Integer; y: Integer);
+begin
+  Month:=m;
+  Day:=d;
+  Year:=y;
+end;
+function TDate.leapYear: Boolean;
+begin
+  Result:=IsLeapYear(Year);
+end;
+ ////TDta procedurleri--<
+
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+List := TStringList.Create;
+   try
+    ExtractStrings([':'], [], PChar(Edit1.Text), List);
+    //WriteLn(List.Text);
+    //ReadLn;
+  finally
+    List.Free;
+  end;
+  label1.Caption:=List[0];
+end;
+
+end.

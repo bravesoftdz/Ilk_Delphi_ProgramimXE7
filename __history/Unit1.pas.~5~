@@ -1,0 +1,66 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,vectortypes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, GLWin32Viewer,
+  GLCrossPlatform, BaseClasses, GLScene;
+
+type
+  TForm1 = class(TForm)
+    Button1: TButton;
+    GLScene1: TGLScene;
+    GLSceneViewer1: TGLSceneViewer;
+    procedure Button1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+
+  //structer tanýmý
+    type
+    cartesian = Record
+    N0,N1,N2: double;
+    end;
+    type
+    faced= Record
+    X,Y,Z,Nor:cartesian;
+    end;
+  //structer tanýmý
+
+
+implementation
+
+{$R *.dfm}
+ // Procedure ler deðer döndürmezler sadece birþey icra edip býrakýrlar........
+// C++ karþýlýðý Void dir.
+procedure dosyaOku(dosyaAdi: string);
+var
+  I: integer;
+  txtDosyam:TextFile;
+  text:string;
+begin
+ AssignFile(txtDosyam, dosyaadi);
+ ReWrite(txtDosyam);
+ FileMode := fmOpenRead;
+ ReadLn(txtDosyam, text);
+ while not Eof(txtDosyam) do
+  begin
+    ShowMessage(text);
+    ReadLn(txtDosyam, text);
+  end;
+  CloseFile(txtDosyam);
+end;
+
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+   dosyaOku('C:\Users\Eyup\Documents\RAD Studio\Projects\Ýlk Delphi Programý\Win32\Debug\Gear.txt');
+end;
+
+end.
