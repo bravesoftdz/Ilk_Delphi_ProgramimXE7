@@ -7,7 +7,7 @@ Uses
     Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, GLWin32Viewer,
     GLCrossPlatform, BaseClasses, GLScene, GLObjects, GLCoordinates,
     GLVectorFileObjects, GLMaterial, GLFILE3DS, Vcl.ComCtrls, vectorgeometry,
-    glcontext, OpenGLTokens, GLGeomObjects, Vcl.ExtCtrls, GLGraph, GLSkydome, GLNavigator, CPort;
+    glcontext, OpenGLTokens, GLGeomObjects, Vcl.ExtCtrls, GLGraph, GLSkydome, GLNavigator, CPort,pGCode;
 
 Type
       TForm1 = Class(TForm)
@@ -38,6 +38,16 @@ Type
     Button7: TButton;
     MemoLog: TMemo;
     Button8: TButton;
+    GLlines2: TGLLines;
+    ListBox1: TListBox;
+    btn1: TButton;
+    ArrowLaserBeam: TGLArrowLine;
+    Point1: TGLPoints;
+    GLlines3: TGLLines;
+    Plane1: TGLPlane;
+    btn2: TButton;
+    CheckBox1: TCheckBox;
+    btn3: TButton;
       Procedure Button1Click(Sender: TObject);
       Procedure Button2Click(Sender: TObject);
       Procedure GLSceneViewer1MouseMove(Sender: TObject; Shift: TShiftState; x,
@@ -65,10 +75,18 @@ Type
     procedure FormShow(Sender: TObject);
     procedure ComDataPacket1Packet(Sender: TObject; const Str: string);
     procedure Button8Click(Sender: TObject);
+    procedure btn1Click(Sender: TObject);
+    procedure GLSceneViewer1MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure btn2Click(Sender: TObject);
+    procedure btn3Click(Sender: TObject);
+    procedure matirxtomemo(M:TMatrix;memo:TMemo);
+    procedure Edit1KeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 
     Private
         { Private declarations }
     Public
+    step:Integer;
+    gridmesafe:Double;
         { Public declarations }
       Procedure dosyaOku(dosyaAdi: String);
     End;
@@ -181,6 +199,45 @@ Begin
     GLSceneViewer1.Repaint;
 End;
 
+procedure TForm1.Edit1KeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+if  Edit1.Text <>'' then
+if key =VK_Return then
+      begin
+          try
+             gridmesafe:= StrToFloat(Edit1.Text);
+          finally
+             gridmesafe:=10;
+          end;
+      end;
+end;
+
+procedure TForm1.btn1Click(Sender: TObject);
+var
+sl:TStringList;
+  I: Integer;
+begin
+sl:=TStringList.Create;
+if FileOpenDialog1.Execute then
+begin
+    sl.LoadFromFile(FileOpenDialog1.FileName);
+ListBox1.Items.Assign(sl);
+end;
+
+sl.Free;
+
+end;
+
+procedure TForm1.btn2Click(Sender: TObject);
+begin
+Plane1.Visible:=not Plane1.Visible;
+end;
+
+procedure TForm1.btn3Click(Sender: TObject);
+begin
+GLlines3.AddNode(AffineVectorMake(0,0,0));
+end;
+
 Procedure TForm1.Button1Click(Sender: TObject);
 Begin
     dosyaOku('Gear.STL');
@@ -289,16 +346,17 @@ MemoLog.Lines.Add(Str);
 //
 //burada str yi al slit et ve rpy i gönder
 // QuaternionFromRollPitchYaw(const r, p, y : Single) : TQuaternion; //kullanýlabilir belki
-qua
+//qua
 
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-EXIT;
-cam_mer.X := 0;
-cam_mer.Y := 0;
-cam_mer.Z := 0;
+//cam_mer.X := 0;
+//cam_mer.Y := 0;
+//cam_mer.Z := 0;
+step:=0;
+gridmesafe:=10;
 end;
 
 Procedure TForm1.FormKeyDown(Sender: TObject; Var Key: Word;
@@ -374,11 +432,65 @@ Begin
 
 End;
 
+procedure TForm1.GLSceneViewer1MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+v:TAffineVector;
+p,rayStart,rayVector:tvector;
+begin
+case step of
+      0:
+      begin
+      GLlines3.AddNode(AffineVectorMake(0,0,0));
+               rayStart := GLSceneViewer1.Buffer.ScreenToWorld(VectorMake(x, GLSceneViewer1.Height - y, 0));
+    rayVector := VectorNormalize(VectorSubtract(GLSceneViewer1.Buffer.ScreenToWorld(VectorMake(x, GLSceneViewer1.Height - y, 1)), rayStart));
+    if Plane1. RayCastIntersect(rayStart, rayVector, @P) then
+    begin
+     if CheckBox1.Checked then
+     begin
+         P.X:=Round(p.X/gridmesafe)*gridmesafe;
+         P.Y:=Round(p.Y/gridmesafe)*gridmesafe;
+         P.Z:=Round(p.Z/gridmesafe)*gridmesafe;
+     end;
+//   v:=GLSceneViewer1.Buffer.ScreenToWorld(x,y);
+   GLlines3.Nodes[GLlines3.Nodes.Count-1].AsVector:=P;
+   if GLlines3.Nodes.Count>0 then
+   Point1.Position.AsAffineVector:=GLlines3.Nodes[GLlines3.Nodes.Count-1].AsAffineVector;
+    end;
+
+          step:=1;
+      end;
+      1:
+      begin
+          step:=0;
+      end;
+
+end;
+//ShowMessage('muose týk');
+//If (ssleft In Shift) Then
+//begin
+//    rayStart := GLSceneViewer1.Buffer.ScreenToWorld(VectorMake(x, GLSceneViewer1.Height - y, 0));
+//    rayVector := VectorNormalize(VectorSubtract(GLSceneViewer1.Buffer.ScreenToWorld(VectorMake(x, GLSceneViewer1.Height - y, 1)), rayStart));
+//    if Plane1. RayCastIntersect(rayStart, rayVector, @P) then
+//    begin
+//     if CheckBox1.Enabled then
+//     begin
+//         P.X:=Round(p.X/gridmesafe)*gridmesafe;
+//         P.Y:=Round(p.Y/gridmesafe)*gridmesafe;
+//         P.Z:=Round(p.Z/gridmesafe)*gridmesafe;
+//     end;
+////   v:=GLSceneViewer1.Buffer.ScreenToWorld(x,y);
+//   GLlines3.AddNode(P);
+//    end;
+//end;
+
+end;
+
 Procedure TForm1.GLSceneViewer1MouseMove(Sender: TObject; Shift: TShiftState; x,
     y: Integer);
 var
 camcen,target,arbitraryZ,camLeftRightnorm,camUpDownnorm,buffer : TAffineVector;
 zoomefect: double;
+p,rayStart,rayVector:tvector;
 Begin
   zoomefect := 1; // zoomefect katsayýsý kamera sað-sol bir piksellik hareketine karþý hedefin kaç birim hareket edeceðidir
   camcen.X := glcamera1.Position.X;
@@ -448,10 +560,28 @@ Begin
     my := y;
     label2.Caption :='Kamera Poz= X ' + floattostr(glcamera1.Position.X) + ' Y ' + floattostr(glcamera1.Position.Y) + ' Z ' + floattostr(glcamera1.Position.Z)  ;
     label3.Caption :='Hedef  Poz= X ' + floattostr(glcamera1.TargetObject.Position.X) + ' Y ' + floattostr(glcamera1.TargetObject.Position.Y) + ' Z ' + floattostr(glcamera1.TargetObject.Position.Z);
+    if step=1 then
+    begin
+         rayStart := GLSceneViewer1.Buffer.ScreenToWorld(VectorMake(x, GLSceneViewer1.Height - y, 0));
+    rayVector := VectorNormalize(VectorSubtract(GLSceneViewer1.Buffer.ScreenToWorld(VectorMake(x, GLSceneViewer1.Height - y, 1)), rayStart));
+    if Plane1. RayCastIntersect(rayStart, rayVector, @P) then
+    begin
+     if CheckBox1.Checked then
+     begin
+         P.X:=Round(p.X/gridmesafe)*gridmesafe;
+         P.Y:=Round(p.Y/gridmesafe)*gridmesafe;
+         P.Z:=Round(p.Z/gridmesafe)*gridmesafe;
+     end;
+
+   GLlines3.Nodes[GLlines3.Nodes.Count-1].AsVector:=P;
+   if GLlines3.Nodes.Count>0 then
+   Point1.Position.AsAffineVector:=GLlines3.Nodes[GLlines3.Nodes.Count-1].AsAffineVector;
+    end;
+    end;
+    matirxtomemo(GLCamera1.TargetObject.AbsoluteMatrix,MemoLog);
 End;
 
-Procedure TForm1.GLSceneViewer1MouseWheel(Sender: TObject; Shift: TShiftState;
-    WheelDelta: Integer; MousePos: TPoint; Var Handled: Boolean);
+Procedure TForm1.GLSceneViewer1MouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint; Var Handled: Boolean);
 Begin
     Label1.Caption := 'Mouse delta ' + inttostr(WheelDelta);
 End;
@@ -468,6 +598,38 @@ procedure TForm1.GLSceneViewer1MouseWheelUp(Sender: TObject; Shift: TShiftState;
 begin
   label1.Caption := 'mouse wheel up !!!';
 end;
+
+procedure TForm1.matirxtomemo(M: TMatrix; memo: TMemo);
+var
+s:string;
+begin
+memo.Clear;
+s:='';
+s:='X.x='+FloatToStr(m.X.X);
+s:=s+'  Y.x='+FloatToStr(m.Y.X);
+s:=s+'  Z.x='+FloatToStr(m.z.x);
+s:=s+'  W.x='+FloatToStr(m.w.X);
+memo.Lines.Add(s);
+s:='';
+s:='X.y='+FloatToStr(m.X.y);
+s:=s+'  Y.y='+FloatToStr(m.Y.y);
+s:=s+'  Z.y='+FloatToStr(m.z.y);
+s:=s+'  W.y='+FloatToStr(m.w.y);
+memo.Lines.Add(s);
+s:='';
+s:='X.z='+FloatToStr(m.X.z);
+s:=s+'  Y.z='+FloatToStr(m.Y.z);
+s:=s+'  Z.z='+FloatToStr(m.z.z);
+s:=s+'  W.z='+FloatToStr(m.w.z);
+memo.Lines.Add(s);
+s:='';
+s:='X.w='+FloatToStr(m.X.W);
+s:=s+'  Y.w='+FloatToStr(m.Y.W);
+s:=s+'  Z.w='+FloatToStr(m.z.w);
+s:=s+'  W.w='+FloatToStr(m.w.w);
+memo.Lines.Add(s);
+end;
+
 
 Procedure TForm1.TrackBar1Change(Sender: TObject);
 var

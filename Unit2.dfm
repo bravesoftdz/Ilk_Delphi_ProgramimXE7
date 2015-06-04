@@ -3,7 +3,7 @@ object Form1: TForm1
   Top = 0
   Caption = 'Caption'
   ClientHeight = 760
-  ClientWidth = 1118
+  ClientWidth = 1249
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -29,6 +29,7 @@ object Form1: TForm1
     Buffer.FaceCulling = False
     FieldOfView = 163.436340332031300000
     Align = alLeft
+    OnMouseDown = GLSceneViewer1MouseDown
     OnMouseMove = GLSceneViewer1MouseMove
     OnMouseWheel = GLSceneViewer1MouseWheel
     OnMouseWheelDown = GLSceneViewer1MouseWheelDown
@@ -39,11 +40,11 @@ object Form1: TForm1
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 1118
+    Width = 1249
     Height = 73
     Align = alTop
     TabOrder = 1
-    ExplicitWidth = 1054
+    ExplicitWidth = 1118
     object Label1: TLabel
       Left = 433
       Top = 8
@@ -91,6 +92,7 @@ object Form1: TForm1
       Height = 21
       TabOrder = 2
       Text = 'Edit1'
+      OnKeyUp = Edit1KeyUp
     end
     object Button3: TButton
       Left = 312
@@ -155,23 +157,74 @@ object Form1: TForm1
       TabOrder = 9
       OnClick = Button8Click
     end
+    object btn1: TButton
+      Left = 1056
+      Top = 42
+      Width = 75
+      Height = 25
+      Caption = 'GM code al'
+      TabOrder = 10
+      OnClick = btn1Click
+    end
+    object btn2: TButton
+      Left = 1137
+      Top = 42
+      Width = 57
+      Height = 25
+      Caption = 'btn2'
+      TabOrder = 11
+      OnClick = btn2Click
+    end
+    object CheckBox1: TCheckBox
+      Left = 1056
+      Top = 19
+      Width = 97
+      Height = 17
+      Caption = 'Gride Kenetlen'
+      TabOrder = 12
+    end
+    object btn3: TButton
+      Left = 1152
+      Top = 11
+      Width = 75
+      Height = 25
+      Caption = 'node ekle'
+      TabOrder = 13
+      OnClick = btn3Click
+    end
   end
   object MemoLog: TMemo
     Left = 793
     Top = 73
-    Width = 325
+    Width = 224
     Height = 687
-    Align = alClient
+    Align = alLeft
     Lines.Strings = (
       'Serial Bilgi....'
       '')
     ScrollBars = ssBoth
     TabOrder = 2
-    ExplicitWidth = 261
+  end
+  object ListBox1: TListBox
+    Left = 1017
+    Top = 73
+    Width = 232
+    Height = 687
+    Align = alClient
+    ItemHeight = 13
+    TabOrder = 3
+    ExplicitLeft = 1049
+    ExplicitWidth = 159
   end
   object GLScene1: TGLScene
     Left = 16
     Top = 79
+    object Point1: TGLPoints
+      NoZWrite = False
+      Static = False
+      Size = 6.000000000000000000
+      Style = psSmooth
+    end
     object GLPlane1: TGLPlane
       Visible = False
       Height = 100.000000000000000000
@@ -211,6 +264,33 @@ object Form1: TForm1
       VisibleAtRunTime = True
     end
     object FF: TGLFreeForm
+    end
+    object GLlines2: TGLLines
+      Nodes = <>
+      Options = []
+    end
+    object ArrowLaserBeam: TGLArrowLine
+      Direction.Coordinates = {0000000000000000000080BF00000000}
+      Position.Coordinates = {0000000000000000000048430000803F}
+      ShowAxes = True
+      BottomRadius = 10.000000000000000000
+      Height = 100.000000000000000000
+      TopRadius = 10.000000000000000000
+      TopArrowHeadHeight = 50.000000000000000000
+      TopArrowHeadRadius = 20.000000000000000000
+      BottomArrowHeadHeight = 50.000000000000000000
+      BottomArrowHeadRadius = 20.000000000000000000
+    end
+    object GLlines3: TGLLines
+      LineColor.Color = {9A99593F9A99593FCDCCCC3D0000803F}
+      Nodes = <>
+      Options = []
+    end
+    object Plane1: TGLPlane
+      ShowAxes = True
+      Visible = False
+      Height = 500.000000000000000000
+      Width = 500.000000000000000000
     end
   end
   object FileOpenDialog1: TFileOpenDialog
