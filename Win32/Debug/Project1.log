@@ -4,13 +4,13 @@
 0	 (i)  Temporary rendering context created
 0	 (M)  Getting OpenGL entry points and extension
 0	 (M)  
-16	 (i)  OpenGL rendering context information:
-16	 (i)  Renderer     : Quadro K2100M/PCIe/SSE2
-16	 (i)  Vendor       : NVIDIA Corporation
-16	 (i)  Version      : 4.3.0
-16	 (i)  GLSL version : 4.30 NVIDIA via Cg compiler
-16	 (M)  
-16	 (i)  Temporary rendering context destroyed
-31	 (M)  Getting OpenGL entry points and extension
-3914422	 (i)  Logged fatal_errors: 0, errors: 0, warnings: 0, notices: 4, info: 10, debug: 0
-3914422	 (i)  Log session shutdown
+0	 (i)  OpenGL rendering context information:
+0	 (i)  Renderer     : AMD Mobility Radeon HD 5000 Series
+0	 (i)  Vendor       : ATI Technologies Inc.
+0	 (i)  Version      : 4.4.13292 Compatibility Profile Context 14.502.1014.0
+0	 (i)  GLSL version : 4.40
+0	 (M)  
+31	 (i)  Temporary rendering context destroyed
+78	 (M)  Getting OpenGL entry points and extension
+1820812	 (i)  Logged fatal_errors: 0, errors: 0, warnings: 0, notices: 4, info: 10, debug: 0
+1820812	 (i)  Log session shutdown

@@ -1,4 +1,4 @@
-Unit Unit2;
+ï»¿Unit Unit2;
 
 Interface
 
@@ -87,6 +87,7 @@ Type
     Public
     step:Integer;
     gridmesafe:Double;
+      v:TAffineVector;
         { Public declarations }
       Procedure dosyaOku(dosyaAdi: String);
     End;
@@ -94,16 +95,15 @@ Var
     Form1: TForm1;
     List: TStringList;
     MX, my: Integer;
-    formatim: Tformatsettings; //desimal seperatörü bulmak için
+    formatim: Tformatsettings; //desimal seperatÃ¶rÃ¼ bulmak iÃ§in
     panx,pany:integer;
     Cam_mer:Taffinevector;
 
 Implementation
 
 {$R *.dfm}
-
-// Procedure ler deðer döndürmezler sadece birþey icra edip býrakýrlar........
-// C++ karþýlýðý Void dir.
+// Procedure ler deÄŸer dÃ¶ndÃ¼rmezler sadece birÅŸey icra edip bÄ±rakÄ±rlar........
+// C++ karÅŸÄ±lÄ±ÄŸÄ± Void dir.
 
 Procedure AddFace(M: TMeshObject; f: TFGVertexNormalTexIndexList; V1, V2, v3: TAffineVector);
 Var
@@ -143,13 +143,13 @@ Begin
 
     List2 := TStringList.Create;
     //form1.GLFreeForm1:=tGLFreeForm.create(form1);
-     /////// gl baþlangýç iþlemleri              //meshobject deðilde vertex normal çizerek ?
+     /////// gl baÅŸlangÄ±Ã§ iÅŸlemleri              //meshobject deÄŸilde vertex normal Ã§izerek ?
     // MO := TMeshObject.CreateOwned(form1.GLFreeForm1.MeshObjects) ;
     // MO.Mode := momFaceGroups;
     // FG := TFGVertexNormalTexIndexList.CreateOwned(MO.FaceGroups);
     // FG.Mode := fgmmTriangles;
     n := 0;
-    //////dosya iþlmeleri
+    //////dosya iÅŸlmeleri
     AssignFile(txtDosyam, dosyaAdi);
     // Reopen the file in read only mode
     Reset(txtDosyam);
@@ -214,17 +214,47 @@ end;
 
 procedure TForm1.btn1Click(Sender: TObject);
 var
-sl:TStringList;
+sl,linesl:TStringList;
   I: Integer;
+  j: Integer;
 begin
 sl:=TStringList.Create;
+linesl:=TStringList.Create;
 if FileOpenDialog1.Execute then
 begin
     sl.LoadFromFile(FileOpenDialog1.FileName);
 ListBox1.Items.Assign(sl);
 end;
 
+for I := 0 to sl.Count-1 do
+begin
+sl[i]:=UpperCase(sl[i]);
+sl[i]:=StringReplace(sl[i],'G00','G0',[rfReplaceAll,rfIgnoreCase]);
+sl[i]:=StringReplace(sl[i],'G01','G1',[rfReplaceAll,rfIgnoreCase]);
+sl[i]:=StringReplace(sl[i],'G02','G2',[rfReplaceAll,rfIgnoreCase]);
+sl[i]:=StringReplace(sl[i],'G03','G3',[rfReplaceAll,rfIgnoreCase]);
+if (Copy(sl[i],1,3)='G0 ')or(Copy(sl[i],1,3)='G1 ')or(Copy(sl[i],1,3)='G2 ')or(Copy(sl[i],1,3)='G3 ') then
+begin
+   linesl.Delimiter:=' ';
+   linesl.DelimitedText:=sl[i];
+   for j := 0 to linesl.Count-1 do
+    begin
+        linesl[j]:=StringReplace(linesl[j],'.',formatim.DecimalSeparator,[rfReplaceAll,rfIgnoreCase]);
+        linesl[j]:=StringReplace(linesl[j],',',formatim.DecimalSeparator,[rfReplaceAll,rfIgnoreCase]);
+      if copy(linesl[j],1,1)='X' then
+        v.X:= StrToFloat(StringReplace(linesl[j],'X','',[rfReplaceAll,rfIgnoreCase]))
+      else if copy(linesl[j],1,1)='Y'  then
+        v.Y:= StrToFloat(StringReplace(linesl[j],'Y','',[rfReplaceAll,rfIgnoreCase]))
+      else if copy(linesl[j],1,1)='Z'   then
+       v.z:= StrToFloat(StringReplace(linesl[j],'Z','',[rfReplaceAll,rfIgnoreCase]));
+    end;
+    GLlines3.AddNode(v);
+end;
+end;
+
+
 sl.Free;
+linesl.Free;
 
 end;
 
@@ -251,7 +281,7 @@ Begin
     Label1.Caption := inttostr(List.Count);
     formatim:=Tformatsettings.Create;
     Label1.Caption:=label1.Caption+' Desimalsep='+formatim.DecimalSeparator;
-    showmessage(' Desimal seperatör= "'+formatim.DecimalSeparator+' "');
+    showmessage(' Desimal seperatÃ¶r= "'+formatim.DecimalSeparator+' "');
 End;
 
 Procedure TForm1.Button3Click(Sender: TObject);
@@ -321,12 +351,12 @@ begin
     ComPort.Open;
     if ComPort.Connected then
     begin
-      MemoLog.Text := MemoLog.Text + '(' + ComPort.Port + ') Ýletiþim Baþarýlý...';
+      MemoLog.Text := MemoLog.Text + '(' + ComPort.Port + ') Ä°letiÅŸim BaÅŸarÄ±lÄ±...';
       MemoLog.Lines.Add('');
     end
     else
     begin
-      MemoLog.Text := MemoLog.Text + '(' + ComPort.Port + ') Ýletiþim Baþarýsýz';
+      MemoLog.Text := MemoLog.Text + '(' + ComPort.Port + ') Ä°letiÅŸim BaÅŸarÄ±sÄ±z';
     end;
   Except
     on E: Exception do
@@ -344,8 +374,8 @@ begin
 MemoLog.Lines.Add(Str);
 
 //
-//burada str yi al slit et ve rpy i gönder
-// QuaternionFromRollPitchYaw(const r, p, y : Single) : TQuaternion; //kullanýlabilir belki
+//burada str yi al slit et ve rpy i gÃ¶nder
+// QuaternionFromRollPitchYaw(const r, p, y : Single) : TQuaternion; //kullanÄ±labilir belki
 //qua
 
 end;
@@ -363,7 +393,7 @@ Procedure TForm1.FormKeyDown(Sender: TObject; Var Key: Word;
     Shift: TShiftState);
 Begin
     If Key = VK_ESCAPE Then
-        ShowMessage('ESCAPE e  bastýn');
+        ShowMessage('ESCAPE e  bastÄ±n');
 End;
 
 procedure TForm1.FormMouseWheel(Sender: TObject; Shift: TShiftState;
@@ -405,7 +435,7 @@ end;
 procedure TForm1.FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
   MousePos: TPoint; var Handled: Boolean);
 begin
-//  label1.Caption := 'Mx ' + floattostr()   //BURAYA WHEEL UP YAPTIÐINDA MOUSE POZ UNU LABELDE YAZDIRCAKTIM
+//  label1.Caption := 'Mx ' + floattostr()   //BURAYA WHEEL UP YAPTIÄžINDA MOUSE POZ UNU LABELDE YAZDIRCAKTIM
 end;
 
 procedure TForm1.FormShow(Sender: TObject);
@@ -420,15 +450,15 @@ Procedure TForm1.GLSceneViewer1KeyDown(Sender: TObject; Var Key: Word;
     Shift: TShiftState);
 Begin
 
-    //  if Key=ssctrl then
-    //  begin
-    //  Key:=0;
-    //  Label1.Caption:='';
-    //  end
-    //  else
-    //  begin
-    //  Label1.Caption:='CTRL';
-    //  end;
+//      if Key=ssctrl then
+//      begin
+//      Key:=0;
+//      Label1.Caption:='';
+//      end
+//      else
+//      begin
+//      Label1.Caption:='CTRL';
+//      end;
 
 End;
 
@@ -437,35 +467,35 @@ var
 v:TAffineVector;
 p,rayStart,rayVector:tvector;
 begin
-case step of
-      0:
-      begin
-      GLlines3.AddNode(AffineVectorMake(0,0,0));
-               rayStart := GLSceneViewer1.Buffer.ScreenToWorld(VectorMake(x, GLSceneViewer1.Height - y, 0));
-    rayVector := VectorNormalize(VectorSubtract(GLSceneViewer1.Buffer.ScreenToWorld(VectorMake(x, GLSceneViewer1.Height - y, 1)), rayStart));
-    if Plane1. RayCastIntersect(rayStart, rayVector, @P) then
-    begin
-     if CheckBox1.Checked then
-     begin
-         P.X:=Round(p.X/gridmesafe)*gridmesafe;
-         P.Y:=Round(p.Y/gridmesafe)*gridmesafe;
-         P.Z:=Round(p.Z/gridmesafe)*gridmesafe;
-     end;
-//   v:=GLSceneViewer1.Buffer.ScreenToWorld(x,y);
-   GLlines3.Nodes[GLlines3.Nodes.Count-1].AsVector:=P;
-   if GLlines3.Nodes.Count>0 then
-   Point1.Position.AsAffineVector:=GLlines3.Nodes[GLlines3.Nodes.Count-1].AsAffineVector;
+    case step of
+          0:
+          begin
+          GLlines3.AddNode(AffineVectorMake(0,0,0));
+                   rayStart := GLSceneViewer1.Buffer.ScreenToWorld(VectorMake(x, GLSceneViewer1.Height - y, 0));
+        rayVector := VectorNormalize(VectorSubtract(GLSceneViewer1.Buffer.ScreenToWorld(VectorMake(x, GLSceneViewer1.Height - y, 1)), rayStart));
+        if Plane1. RayCastIntersect(rayStart, rayVector, @P) then
+        begin
+                if CheckBox1.Checked then
+               begin
+                  P.X:=Round(p.X/gridmesafe)*gridmesafe;
+                  P.Y:=Round(p.Y/gridmesafe)*gridmesafe;
+                  P.Z:=Round(p.Z/gridmesafe)*gridmesafe;
+               end;
+    //   v:=GLSceneViewer1.Buffer.ScreenToWorld(x,y);
+              GLlines3.Nodes[GLlines3.Nodes.Count-1].AsVector:=P;
+              if GLlines3.Nodes.Count>0 then
+               Point1.Position.AsAffineVector:=GLlines3.Nodes[GLlines3.Nodes.Count-1].AsAffineVector;
+        end;
+
+              step:=1;
+          end;
+          1:
+          begin
+              step:=0;
+          end;
+
     end;
-
-          step:=1;
-      end;
-      1:
-      begin
-          step:=0;
-      end;
-
-end;
-//ShowMessage('muose týk');
+//ShowMessage('muose tÄ±k');
 //If (ssleft In Shift) Then
 //begin
 //    rayStart := GLSceneViewer1.Buffer.ScreenToWorld(VectorMake(x, GLSceneViewer1.Height - y, 0));
@@ -492,7 +522,7 @@ camcen,target,arbitraryZ,camLeftRightnorm,camUpDownnorm,buffer : TAffineVector;
 zoomefect: double;
 p,rayStart,rayVector:tvector;
 Begin
-  zoomefect := 1; // zoomefect katsayýsý kamera sað-sol bir piksellik hareketine karþý hedefin kaç birim hareket edeceðidir
+  zoomefect := 1; // zoomefect katsayÄ±sÄ± kamera saÄŸ-sol bir piksellik hareketine karÅŸÄ± hedefin kaÃ§ birim hareket edeceÄŸidir
   camcen.X := glcamera1.Position.X;
   camcen.Y := glcamera1.Position.Y;
   camcen.Z := glcamera1.Position.Z;
@@ -503,12 +533,12 @@ Begin
   target.Y := glcamera1.TargetObject.Position.Y;
   target.Z := 0;
   camleftrightnorm := CalcPlaneNormal(camcen, target, arbitraryZ);
-  camUpDownnorm.X := camcen.X + camleftrightnorm.X;       // camupdownnorm buffer olarak kullanýlýyor
+  camUpDownnorm.X := camcen.X + camleftrightnorm.X;       // camupdownnorm buffer olarak kullanÄ±lÄ±yor
   camUpDownnorm.Y := camcen.Y + camleftrightnorm.Y;
   camUpDownnorm.Z := camcen.Z + camleftrightnorm.Z;
   camUpDownnorm := CalcPlaneNormal(camcen,camUpDownnorm,target);
 
-  //glplane1 i kameraya sürekli yüneltme
+  //glplane1 i kameraya sÃ¼rekli yÃ¼neltme
   glplane1.Position := glcamera1.TargetObject.Position ;
   buffer := vectornormalize(affinevectormake(glcamera1.Position.X-glcamera1.TargetObject.Position.X,glcamera1.Position.Y-glcamera1.TargetObject.Position.Y,glcamera1.Position.Z-glcamera1.TargetObject.Position.Z));
   glplane1.Direction.x := buffer.x ;
@@ -528,9 +558,9 @@ Begin
      else if (ssmiddle in shift) then  //PAN
      Begin
 
-        // TO DO LÝST
-        // Z içinde brim vektör hesapla  -Yapýldý
-        // zoom efec olayýný iþin içine kat
+        // TO DO LÄ°ST
+        // Z iÃ§inde brim vektÃ¶r hesapla  -YapÄ±ldÄ±
+        // zoom efec olayÄ±nÄ± iÅŸin iÃ§ine kat
         if glcamera1.Up.Z=1 then
         begin
           if glcamera1.CameraStyle = csperspective then

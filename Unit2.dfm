@@ -44,7 +44,6 @@ object Form1: TForm1
     Height = 73
     Align = alTop
     TabOrder = 1
-    ExplicitWidth = 1118
     object Label1: TLabel
       Left = 433
       Top = 8
@@ -213,8 +212,6 @@ object Form1: TForm1
     Align = alClient
     ItemHeight = 13
     TabOrder = 3
-    ExplicitLeft = 1049
-    ExplicitWidth = 159
   end
   object GLScene1: TGLScene
     Left = 16

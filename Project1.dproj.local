@@ -1,15 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>1899.12.30 00:00:00.000.995,C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Unit1.pas=C:\Users\Eyup\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.380,C:\Ilk_Delphi_ProgramimXE7\Unit3.pas=C:\Ilk_Delphi_ProgramimXE7\pGCode.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.420,C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Unit2.dfm=C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Unit1.dfm</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.995,C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Unit1.dfm=C:\Users\Eyup\Documents\RAD Studio\Projects\Unit1.dfm</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.770,C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Project1.dproj=C:\Users\Eyup\Documents\RAD Studio\Projects\Project1.dproj</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.106,=C:\Users\Eyup\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.420,C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Unit2.pas=C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.452,=C:\Ilk_Delphi_ProgramimXE7\Unit3.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.151,=C:\Ilk_Delphi_ProgramimXE7\Unit3.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.223,=C:\Ilk_Delphi_ProgramimXE7\Unit3.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.151,=C:\Ilk_Delphi_ProgramimXE7\Unit3.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.452,=C:\Ilk_Delphi_ProgramimXE7\Unit3.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.420,C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Unit1.dfm=C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Unit2.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.995,C:\Users\Eyup\Documents\RAD Studio\Projects\Unit1.dfm=C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Unit1.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.995,C:\Users\Eyup\Documents\RAD Studio\Projects\Unit1.pas=C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.770,C:\Users\Eyup\Documents\RAD Studio\Projects\Project1.dproj=C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Project1.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.106,=C:\Users\Eyup\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.420,C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Unit1.pas=C:\Users\Eyup\Documents\RAD Studio\Projects\İlk Delphi Programı\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.380,C:\Ilk_Delphi_ProgramimXE7\pGCode.pas=C:\Ilk_Delphi_ProgramimXE7\Unit3.pas</Transaction>
   </Transactions>
 </BorlandProject>
