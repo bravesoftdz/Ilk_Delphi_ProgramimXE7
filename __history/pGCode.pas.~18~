@@ -5,8 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs,GLscene,VectorGeometry,GLRenderContextInfo;
-type
-  TObjectMode = (omNone, omMove, omCopy, omMoveNode, omMoveCol, omMoveRow, omAddNode, omAlignZ, omConnectZ); //bunu pclasses gibi baþka bir unite taþanýabilir
+
 type
   TGCode = class(TCollectionItem)
   private
@@ -37,22 +36,14 @@ type
 
   TGGeo = class(TGLCustomSceneObject)
     private
-    FObjectMode: TObjectMode;
-    procedure SetObjectMode(const Value: TObjectMode);
 
     public
       Gs:TGs;
-      Step: Integer;
-      Changed: Boolean;
-      Deleted:Boolean;
       constructor Create(AOwner: TComponent);override;
       destructor Destroy;override;
       procedure doRender(var rci: TRenderContextInfo; renderSelf, renderChildren: Boolean); Override;
       procedure BuildList(var rci: TRenderContextInfo); Override;
       procedure Startedit; Override;
-      Property ObjectMode: TObjectMode Read FObjectMode Write SetObjectMode;
-      procedure UnDelete;
-      procedure Delete;
   end;
 
 implementation
@@ -84,23 +75,13 @@ end;
 procedure TGGeo.BuildList(var rci: TRenderContextInfo);
 begin
   inherited;
-  // burda object mode göre bazý geçiþ iþlemleri yapýlabilir taþýnýrken kesþikli çizgilerin filan gösterilmnesi gibi.
-  // ama burda opengl calýþýyoruz vertex lerle filan yani begin end lerle filan burda çalýþýrken dikkatli olunmalý
+
 end;
 
 constructor TGGeo.Create(AOwner: TComponent);
 begin
   inherited;
   Gs:=TGs.Create(Self,TGCode);
-  Changed:=True;
-  Deleted:=False;
-end;
-
-procedure TGGeo.Delete;
-begin
-Deleted:=True;
-Changed:=True;
-StructureChanged;
 end;
 
 destructor TGGeo.Destroy;
@@ -115,24 +96,10 @@ begin
 
 end;
 
-procedure TGGeo.SetObjectMode(const Value: TObjectMode);
-begin
-  FObjectMode := Value;
-  Step := 0;
-  Structurechanged;
-end;
-
 procedure TGGeo.Startedit;
 begin
   inherited;
 
-end;
-
-procedure TGGeo.UnDelete;
-begin
-  Deleted:=False;
-  Changed:=True;
-  StructureChanged;
 end;
 
 end.
