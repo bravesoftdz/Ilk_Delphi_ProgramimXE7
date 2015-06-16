@@ -4,7 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs,GLscene,VectorGeometry,GLRenderContextInfo;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs,GLscene,VectorGeometry,GLRenderContextInfo,pSetup,OpenGLAdapter,
+  GLContext,OpenGLTokens;
 type
   TObjectMode = (omNone, omMove, omCopy, omMoveNode, omMoveCol, omMoveRow, omAddNode, omAlignZ, omConnectZ); //bunu pclasses gibi baþka bir unite taþanýabilir
 type
@@ -20,6 +21,7 @@ type
     JV:TAffineVector;
     KV:TAffineVector;
     SegmentLenght:Double;     // setup oluþturulup ondan alsak daha þýk olur
+    procedure Draw(setup: TSetup; var rci: TRenderContextInfo);
     { Public declarations }
   end;
 
@@ -49,18 +51,13 @@ type
       destructor Destroy;override;
       procedure doRender(var rci: TRenderContextInfo; renderSelf, renderChildren: Boolean); Override;
       procedure BuildList(var rci: TRenderContextInfo); Override;
-      procedure Startedit; Override;
+      procedure Startedit; virtual;
       Property ObjectMode: TObjectMode Read FObjectMode Write SetObjectMode;
       procedure UnDelete;
       procedure Delete;
   end;
 
 implementation
-
-function addGCodeLine(s:string):TGCode;
-begin
-    Result:=TGCode.Create;
-end;
 
 { TG0 }
 
@@ -133,6 +130,17 @@ begin
   Deleted:=False;
   Changed:=True;
   StructureChanged;
+end;
+
+{ TGCode }
+
+procedure TGCode.Draw(setup: TSetup; var rci: TRenderContextInfo);
+begin
+//    gl.Enable(gl_color_material);
+//    gl.Disable(gl_line_stipple);
+//
+//
+//    gl.Disable(gl_color_material);
 end;
 
 end.

@@ -3,8 +3,7 @@ program Project1;
 uses
   Vcl.Forms,
   Unit2 in 'Unit2.pas' {Form1},
-  pGCode in 'pGCode.pas',
-  pSetup in 'pSetup.pas';
+  pGCode in 'pGCode.pas';
 
 {$R *.res}
 

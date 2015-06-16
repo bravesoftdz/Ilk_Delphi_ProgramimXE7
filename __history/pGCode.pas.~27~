@@ -1,0 +1,454 @@
+unit pGCode;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs,GLscene,VectorGeometry,GLRenderContextInfo,pSetup,OpenGLAdapter;
+type
+  TObjectMode = (omNone, omMove, omCopy, omMoveNode, omMoveCol, omMoveRow, omAddNode, omAlignZ, omConnectZ); //bunu pclasses gibi baþka bir unite taþanýabilir
+type
+  TGCode = class(TCollectionItem)
+  private
+    { Private declarations }
+  public
+    WamI:string;
+    StartV:TAffineVector;
+    EndV:TAffineVector;
+    CenterV:TAffineVector;
+    IV:TAffineVector;
+    JV:TAffineVector;
+    KV:TAffineVector;
+    SegmentLenght:Double;     // setup oluþturulup ondan alsak daha þýk olur
+    procedure Draw(setup: TSetup; var rci: TRenderContextInfo);
+    { Public declarations }
+  end;
+
+  TGs=class(TOwnedCollection)
+  private
+    function GetItem(index: integer): TGCode;
+    procedure SetItem(index: integer; const Value: TGCode);
+
+  public
+    // Text i tutan linelarý tutan bir stringlist eklenebilir
+    // Fakat strintg listteki line nýn karþýlýðýnýda bilmek istiyorum daha sonra yapalým
+    function add: TGCode;
+    property Items[index: integer]: TGCode read GetItem write SetItem ; Default;
+  end;
+
+  TGGeo = class(TGLCustomSceneObject)
+    private
+    FObjectMode: TObjectMode;
+    procedure SetObjectMode(const Value: TObjectMode);
+
+    public
+      Gs:TGs;
+      Step: Integer;
+      Changed: Boolean;
+      Deleted:Boolean;
+      constructor Create(AOwner: TComponent);override;
+      destructor Destroy;override;
+      procedure doRender(var rci: TRenderContextInfo; renderSelf, renderChildren: Boolean); Override;
+      procedure BuildList(var rci: TRenderContextInfo); Override;
+      procedure Startedit; Override;
+      Property ObjectMode: TObjectMode Read FObjectMode Write SetObjectMode;
+      procedure UnDelete;
+      procedure Delete;
+  end;
+
+implementation
+
+function addGCodeLine(s:string):TGCode;
+begin
+    Result:=TGCode.Create;
+end;
+
+{ TG0 }
+
+function TGs.add: TGCode;
+begin
+    Result:=TGCode(inherited add);
+end;
+
+function TGs.GetItem(index: integer): TGCode;
+begin
+    Result:= TGCode(inherited GetItem(index));
+end;
+
+procedure TGs.SetItem(index: integer; const Value: TGCode);
+begin
+    inherited SetItem(index,Value);
+end;
+
+{ TGGeo }
+
+procedure TGGeo.BuildList(var rci: TRenderContextInfo);
+begin
+  inherited;
+  // burda object mode göre bazý geçiþ iþlemleri yapýlabilir taþýnýrken kesþikli çizgilerin filan gösterilmnesi gibi.
+  // ama burda opengl calýþýyoruz vertex lerle filan yani begin end lerle filan burda çalýþýrken dikkatli olunmalý
+end;
+
+constructor TGGeo.Create(AOwner: TComponent);
+begin
+  inherited;
+  Gs:=TGs.Create(Self,TGCode);
+  Changed:=True;
+  Deleted:=False;
+end;
+
+procedure TGGeo.Delete;
+begin
+Deleted:=True;
+Changed:=True;
+StructureChanged;
+end;
+
+destructor TGGeo.Destroy;
+begin
+  Gs.Free;
+  inherited;
+end;
+
+procedure TGGeo.doRender(var rci: TRenderContextInfo; renderSelf, renderChildren: Boolean);
+begin
+  inherited;
+
+end;
+
+procedure TGGeo.SetObjectMode(const Value: TObjectMode);
+begin
+  FObjectMode := Value;
+  Step := 0;
+  Structurechanged;
+end;
+
+procedure TGGeo.Startedit;
+begin
+  inherited;
+
+end;
+
+procedure TGGeo.UnDelete;
+begin
+  Deleted:=False;
+  Changed:=True;
+  StructureChanged;
+end;
+
+{ TGCode }
+
+procedure TGCode.Draw(setup: TSetup; var rci: TRenderContextInfo);
+begin
+    gl.Enable(gl_color_material);
+    gl.Disable(gl_line_stipple);
+    Case Tip Of
+        gshape:
+            begin
+                if Lighting then
+                    gl.Enable(gl_lighting);
+                gl.begin_(gl_quads);
+                for I := 0 To Nodes.Count - 1 do
+                    begin
+                        j := I + 1;
+                        if I = Nodes.Count - 1 then
+                            j := 0;
+                        n := CalcPlaneNormal(AffineVectorMake(Nodes[I].x, Nodes[I].y, 0), AffineVectorMake(Nodes[j].x, Nodes[j].y, 0), AffineVectorMake(Nodes[j].x, Nodes[j].y, Height));
+                        gl.Normal3fv(@n);
+                        gl.Vertex3f(Nodes[I].x, Nodes[I].y, 0);
+                        gl.Vertex3f(Nodes[j].x, Nodes[j].y, 0);
+                        gl.Vertex3f(Nodes[j].x, Nodes[j].y, Height);
+                        gl.Vertex3f(Nodes[I].x, Nodes[I].y, Height);
+                    end;
+                gl.End_;
+                // ust
+                n := AffineVectorMake(0, 0, 1);
+                gl.Translatef(0, 0, +Height);
+                Nodes.RenderTesselatedPolygon(False, @n);
+                gl.Translatef(0, 0, -Height);
+            end;
+        gwireshape:
+            begin
+                if setup.oglinewidth then
+                    gl.LineWidth(LineWidth);
+                gl.begin_(gl_line_loop);
+                for I := 0 To Nodes.Count - 1 do
+                    gl.Vertex3f(Nodes[I].x, Nodes[I].y, 0);
+                gl.End_;
+                gl.begin_(gl_line_loop);
+                for I := 0 To Nodes.Count - 1 do
+                    gl.Vertex3f(Nodes[I].x, Nodes[I].y, Height);
+                gl.End_;
+                gl.begin_(gl_lines);
+                for I := 0 To Nodes.Count - 1 do
+                    begin
+                        gl.Vertex3f(Nodes[I].x, Nodes[I].y, 0);
+                        gl.Vertex3f(Nodes[I].x, Nodes[I].y, Height);
+                    end;
+                gl.End_;
+                if setup.oglinewidth then
+                    gl.LineWidth(1);
+            end;
+        gizolator:
+            begin
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 0)), 6, 6, 45);
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 3.5)), 27, 27, 1);
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 5.5)), 18, 18, 1);
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 7.5)), 9, 9, 1);
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 10 + 3.5)), 27, 27, 1);
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 10 + 5.5)), 18, 18, 1);
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 10 + 7.5)), 9, 9, 1);
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 20 + 3.5)), 27, 27, 1);
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 20 + 5.5)), 18, 18, 1);
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 20 + 7.5)), 9, 9, 1);
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 30 + 3.5)), 27, 27, 1);
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 30 + 5.5)), 18, 18, 1);
+                DrawCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 30 + 7.5)), 9, 9, 1);
+            end;
+        gwireizolator:
+            begin
+                if setup.oglinewidth then
+                    gl.LineWidth(LineWidth);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 0)), 6, 6, 45);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 3.5)), 27, 27, 1);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 5.5)), 18, 18, 1);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 7.5)), 9, 9, 1);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 10 + 3.5)), 27, 27, 1);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 10 + 5.5)), 18, 18, 1);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 10 + 7.5)), 9, 9, 1);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 20 + 3.5)), 27, 27, 1);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 20 + 5.5)), 18, 18, 1);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 20 + 7.5)), 9, 9, 1);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 30 + 3.5)), 27, 27, 1);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 30 + 5.5)), 18, 18, 1);
+                DrawWireCyl(VectorAdd(Nodes[0].AsAffineVector, AffineVectorMake(0, 0, 30 + 7.5)), 9, 9, 1);
+                if setup.oglinewidth then
+                    gl.LineWidth(1);
+            end;
+        gwirebox:
+            begin
+                if setup.oglinewidth then
+                    gl.LineWidth(LineWidth);
+                gl.begin_(gl_line_loop);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.End_;
+                gl.begin_(gl_line_loop);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.End_;
+                gl.begin_(gl_lines);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.End_;
+                if setup.oglinewidth then
+                    gl.LineWidth(1);
+            end;
+        gbox:
+            begin
+                gl.begin_(gl_quads);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + 0);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z);
+                gl.End_;
+            end;
+        gQuad:
+            begin
+                if Lighting then
+                    gl.Enable(gl_lighting);
+                n := CalcPlaneNormal(Nodes[0].AsAffineVector, Nodes[1].AsAffineVector, Nodes[2].AsAffineVector);
+                gl.begin_(gl_quads);
+                gl.Normal3fv(@n);
+                gl.Vertex3fv(Nodes[0].AsAddress);
+                gl.Vertex3fv(Nodes[1].AsAddress);
+                gl.Vertex3fv(Nodes[2].AsAddress);
+                gl.Vertex3fv(Nodes[3].AsAddress);
+                gl.End_;
+            end;
+        gtri:
+            begin
+                if Nodes.Count < 3 then
+                    EXIT;
+                // if Lighting then
+                gl.Enable(gl_lighting);
+                n := CalcPlaneNormal(Nodes[0].AsAffineVector, Nodes[1].AsAffineVector, Nodes[2].AsAffineVector);
+                if VectorLength(n) > 0 then
+                    begin
+                        gl.begin_(gl_triangles);
+                        // gl.begin_(gl_line_loop);
+                        gl.Normal3fv(@n);
+                        gl.Vertex3fv(Nodes[0].AsAddress);
+                        gl.Vertex3fv(Nodes[1].AsAddress);
+                        gl.Vertex3fv(Nodes[2].AsAddress);
+                        gl.End_;
+                    end;
+            end;
+        gtris:
+            begin
+                if Lighting then
+                    gl.Enable(gl_lighting);
+                if Nodes.Count > 0 then
+                    begin
+                        gl.begin_(gl_triangles);
+                        for i := 0 to Nodes.Count div 4 - 1 do
+                            begin
+                                gl.Normal3fv(Nodes[i * 4 + 0].AsAddress);
+                                gl.Vertex3fv(Nodes[i * 4 + 1].AsAddress);
+                                gl.Vertex3fv(Nodes[i * 4 + 2].AsAddress);
+                                gl.Vertex3fv(Nodes[i * 4 + 3].AsAddress);
+                            end;
+                        gl.End_;
+                    end;
+            end;
+        gWireBoxc:
+            begin
+                if setup.oglinewidth then
+                    gl.LineWidth(LineWidth);
+                // TABAN
+                gl.begin_(gl_line_loop);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.End_;
+                // TAVAN
+                gl.begin_(gl_line_loop);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.End_;
+                gl.begin_(gl_lines);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.End_;
+                if setup.oglinewidth then
+                    gl.LineWidth(1);
+            end;
+        gboxc:
+            begin
+                gl.begin_(gl_quads);
+                // TABAN
+                n := CalcPlaneNormal(AffineVectorMake(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2), AffineVectorMake(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2), AffineVectorMake(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2));
+                gl.Normal3fv(@n);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                // //TAVAN
+                n := CalcPlaneNormal(AffineVectorMake(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2), AffineVectorMake(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2), AffineVectorMake(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2));
+                gl.Normal3fv(@n);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                // //ON
+                n := CalcPlaneNormal(AffineVectorMake(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2), AffineVectorMake(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2), AffineVectorMake(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2));
+                gl.Normal3fv(@n);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                // //ARKA
+                n := CalcPlaneNormal(AffineVectorMake(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2), AffineVectorMake(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2), AffineVectorMake(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2));
+                gl.Normal3fv(@n);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                // SOL
+                n := CalcPlaneNormal(AffineVectorMake(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2), AffineVectorMake(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2), AffineVectorMake(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2));
+                gl.Normal3fv(@n);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x - Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                // SAG
+                n := CalcPlaneNormal(AffineVectorMake(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2), AffineVectorMake(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2), AffineVectorMake(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2));
+                gl.Normal3fv(@n);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z - Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y + Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.Vertex3f(Nodes[0].x + Nodes[1].x / 2, Nodes[0].y - Nodes[1].y / 2, Nodes[0].z + Nodes[1].z / 2);
+                gl.End_;
+            end;
+        gline:
+            begin
+                if setup.oglinewidth then
+                    gl.LineWidth(LineWidth);
+                gl.begin_(gl_line_strip);
+                for I := 0 To Nodes.Count - 1 do
+                    gl.Vertex3fv(Nodes[I].AsAddress);
+                if Close then
+                    gl.Vertex3fv(Nodes[0].AsAddress);
+                gl.End_;
+                if setup.oglinewidth then
+                    gl.LineWidth(1);
+            end;
+        gpoly:
+            begin
+                if setup.oglinewidth then
+                    gl.LineWidth(LineWidth);
+                gl.begin_(gl_polygon);
+                for I := 0 To Nodes.Count - 1 do
+                    gl.Vertex3fv(Nodes[I].AsAddress);
+                gl.End_;
+                if setup.oglinewidth then
+                    gl.LineWidth(1);
+            end;
+        gcircle:
+            begin
+            end;
+        gtext:
+            begin
+                MYFonts.printtext(False, Matrix, Angle, Size, ScaleX, Text, HorCen, VerCen, Font, rci);
+            end;
+        gpoint:
+            begin
+                gl.begin_(gl_points);
+                for I := 0 To Nodes.Count - 1 do
+                    gl.Vertex3fv(Nodes[I].AsAddress);
+                gl.End_;
+            end;
+    end;
+    gl.Disable(gl_color_material);
+end;
+
+end.
